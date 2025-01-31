@@ -55,7 +55,7 @@ namespace Authentication_Server.Controllers
             }
 
             // TODO: Generate JWT token (will implement in next steps)
-            var accessToken = _tokenService.GenerateToken(request.ClientId!);
+            var accessToken = _tokenService.GenerateToken(request.ClientId!, request.Username);
             return Ok(new { accessToken, message = "Login successful" });
         }
 

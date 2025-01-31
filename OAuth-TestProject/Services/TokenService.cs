@@ -20,12 +20,13 @@ namespace Authentication_Server.Services
             _configuration = configuration;
         }
 
-        public string GenerateToken(string clientId)
+        public string GenerateToken(string clientId, string userName)
         {
 
             var claims = new List<Claim>
             {
-                new Claim(JwtRegisteredClaimNames.Sub, clientId.ToString()), // Subject (user or client)
+                new Claim(JwtRegisteredClaimNames.Sub, clientId.ToString()), // Subject (client)
+                new Claim(JwtRegisteredClaimNames.PreferredUsername, userName.ToString()), // Subject (user )
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) // JWT ID (unique identifier)
             };
 
