@@ -8,13 +8,25 @@ namespace ProxyServer_Yarp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddHttpClient<WallpaperService>();
-            builder.Services.AddScoped<WallpaperService>();
+            builder.Services.AddHttpClient<AuthService>();
+            builder.Services.AddHttpClient<ImageService>();
+            builder.Services.AddScoped<ImageService>();
+            builder.Services.AddScoped<AuthService>();
 
             builder.Services.AddControllers();
 
-            var app = builder.Build();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowClientApp", policy =>
+                {
+                    policy.WithOrigins("https://localhost:7156") // Client app URL
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
+            var app = builder.Build();
+            app.UseCors("AllowClientApp");
             // Configure middleware
             app.UseAuthorization();
             app.MapControllers();

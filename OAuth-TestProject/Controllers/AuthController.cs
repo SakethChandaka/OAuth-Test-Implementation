@@ -6,105 +6,126 @@ using Authentication_Server.Models;
 
 using Authentication_Server.Utils;
 using Authentication_Server.Services;
+using System.Text;
+
 
 
 namespace Authentication_Server.Controllers
 {
     [ApiController]
-    [Route("api/auth")]
+
+    [Route("client/auth")]
     public class AuthController : ControllerBase
     {
         private readonly PasswordHasher _passwordHasher;
         private readonly ApplicationDbContext _context;
         private readonly TokenService _tokenService;
         private readonly ClientVerifier _clientVerifier;
-        public AuthController(ApplicationDbContext context, PasswordHasher passwordHasher, TokenService tokenService, ClientVerifier clientVerifier)
+        private readonly AuthService _authService;
+        private readonly TokenRequestVerifier _tokenRequestVerifier;
+        private readonly GrantService _grantService;
+
+        public AuthController(ApplicationDbContext context, PasswordHasher passwordHasher, TokenService tokenService, ClientVerifier clientVerifier, AuthService authService, TokenRequestVerifier tokenRequestVerifier, GrantService grantService)
         {
             _context = context;
             _passwordHasher = passwordHasher;
-            _tokenService= tokenService;
+            _tokenService = tokenService;
             _clientVerifier = clientVerifier;
+            _authService = authService;
+            _tokenRequestVerifier = tokenRequestVerifier;
+            _grantService = grantService;
         }
 
-        [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        [HttpGet("login")]
+        public IActionResult LoginPage([FromQuery] string client_id, [FromQuery] string redirect_uri)
+        {
+            // Validate client_id and redirect_uri (optional security measure)
+            if (!_clientVerifier.VerifyClient_Login(client_id))
+            {
+                return BadRequest("Invalid client.");
+            }
+
+            // Serve the login page with client_id and redirect_uri
+            var html = System.IO.File.ReadAllText("wwwroot/login.html")
+                .Replace("client_id_from_query", client_id)
+                .Replace("redirect_uri_from_query", redirect_uri);
+
+            return Content(html, "text/html");
+        }
+
+
+        [HttpPost("authorize")]
+        public async Task<IActionResult> Login([FromForm] LoginRequest request)
         {
 
-            // Validate the client credentials (you might want to check against a database)
-            if (!_clientVerifier.VerifyClient(request.ClientId!, request.ClientSecret!))
+            // Get the client_id and client_secret from the Authorization header
+            var authorizationHeader = Request.Headers["Authorization"].ToString();
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Basic "))
             {
-                return Unauthorized(new { message = "Client is Invalid or is Unregistered. Please Signup." });
+                return Unauthorized(new { message = "Missing or invalid client credentials." });
             }
 
-            if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            // Extract client_id and client_secret from the base64 encoded value
+            var encodedCredentials = authorizationHeader.Substring("Basic ".Length).Trim();
+            var decodedCredentials = Encoding.UTF8.GetString(Convert.FromBase64String(encodedCredentials));
+            var credentials = decodedCredentials.Split(':');
+
+            if (credentials.Length != 2)
             {
-                return BadRequest(new { message = "Invalid request." });
+                return Unauthorized(new { message = "Invalid client credentials format." });
             }
 
-            // Find the user by username
-            var user = await _context.User_Auth.FirstOrDefaultAsync(u => u.Username == request.Username);
-            if (user == null)
+            var clientId = credentials[0];
+            var clientSecret = credentials[1];
+
+            // Validate client credentials
+            var client = await _context.Client_Auth.FirstOrDefaultAsync(c => c.ClientId == clientId);
+            if (client == null || client.ClientSecret != clientSecret)
             {
-                return Unauthorized(new { message = "Invalid username or password." });
+                return Unauthorized(new { message = "Invalid client credentials." });
             }
 
-            // Verify the password
-            if (!_passwordHasher.VerifyPassword(request.Password, user.Password!))
+
+            var grant = await _grantService.GenerateGrant(clientId,clientSecret, request.Username);
+            if (!grant.status)
             {
-                return Unauthorized(new { message = "Invalid username or password." });
+                return StatusCode(500, new { message = "An exception occurred while processing your request." });
             }
 
-            // TODO: Generate JWT token (will implement in next steps)
-            var accessToken = _tokenService.GenerateToken(request.ClientId!, request.Username);
-            return Ok(new { accessToken, message = "Login successful" });
+            return Ok(new { grantCode = grant.code });
+        }
+
+        [HttpPost("token")]
+        public async Task<IActionResult> Token([FromBody] TokenRequest request)
+        {
+
+            var verifyGrant = await _tokenRequestVerifier.VerifyAuthGrantAsync(request.AuthGrantCode, request.ClientId, request.ClientSecret);
+
+            if (!verifyGrant)
+            {
+                return Unauthorized(new { message = "Invalid authorization grant." });
+            }
+
+            var token = _tokenService.GenerateToken(request.ClientId,request.Username);
+            if (token == null)
+            {
+                return BadRequest(new { message = "Error generating token, try again!." });
+            }
+            return Ok(new { accessToken = token , message = "token issued!"});
         }
 
         [HttpPost("signup")]
         public async Task<IActionResult> Signup([FromBody] SignupRequest request)
         {
-
-            if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            var (success, message) = await _authService.SignupAsync(request);
+            if (!success)
             {
-                return BadRequest("Invalid request.");
+                return message == "User already exists."
+                    ? Conflict(new { message })
+                    : BadRequest(new { message });
             }
 
-            // Check if user/email already exists
-            var existingUser = await _context.User_Auth.FirstOrDefaultAsync(u => u.Username == request.Username || u.Email == request.Email);
-            if (existingUser != null)
-            {
-                return Conflict("User already exists.");
-            }
-
-            var newUser = new UserAuth
-            {
-                Username = request.Username,
-                Password = _passwordHasher.HashPassword(request.Password),
-                Email = request.Email,
-                LastUpdatedTime = DateTimeOffset.UtcNow,
-                CreatedTime = DateTimeOffset.UtcNow,
-            };
-
-            try
-            {
-                // Add the new user to the database
-                var addUser = await _context.User_Auth.AddAsync(newUser);
-                
-                // Save changes to the database
-                await _context.SaveChangesAsync();
-
-                // Return success response
-                return Ok(new { message = "Signup successful" });
-            }
-            catch (DbUpdateException ex)
-            {
-                // Handle database-related errors
-                return StatusCode(500, new { message = "An error occurred while saving the user.", details = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                // Handle other types of exceptions
-                return StatusCode(500, new { message = "An unexpected error occurred.", details = ex.Message });
-            }
+            return Ok(new { message });
         }
     }
 }
