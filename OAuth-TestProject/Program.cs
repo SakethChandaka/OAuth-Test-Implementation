@@ -15,10 +15,13 @@ namespace Authentication_Server
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddSingleton<PasswordHasher>();
-            builder.Services.AddSingleton<TokenService>();
+            builder.Services.AddScoped<PasswordHasher>();
+            builder.Services.AddScoped<TokenService>();
             builder.Services.AddScoped<ClientVerifier>();
             builder.Services.AddScoped<HandleClientService>();
+            builder.Services.AddScoped<AuthService>();
+            builder.Services.AddScoped<TokenRequestVerifier>();
+            builder.Services.AddScoped<GrantService>();
 
             builder.Services.AddControllers();
 
