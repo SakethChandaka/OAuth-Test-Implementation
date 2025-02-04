@@ -40,20 +40,60 @@
             button:hover {
                 background-color: #0056b3;
             }
+
+        .message {
+            margin-top: 15px;
+            color: red;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Parnasoft OAuth Login</h2>
-        <form id="loginForm" method="POST" action="/client/auth/authorize">
-            <input type="hidden" name="client_id" value="client_id_from_query">
-            <input type="hidden" name="redirect_uri" value="redirect_uri_from_query">
+        <h2>Custom OAuth Login</h2>
+        <form id="loginForm">
             <label>Username:</label>
             <input type="text" name="username" required>
             <label>Password:</label>
             <input type="password" name="password" required>
             <button type="submit">Login</button>
         </form>
+        <div class="message" id="responseMessage"></div>
     </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const username = e.target.username.value;
+            const password = e.target.password.value;
+
+            // Extract client_id and redirect_uri from query parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const clientId = urlParams.get('client_id');
+            const redirectUri = urlParams.get('redirect_uri');
+
+            try {
+                const response = await fetch('/user/auth/authorize', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Client-ID': clientId,
+                        'Redirect-URI': redirectUri
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    window.location.href = data.redirectUrl;
+                } else {
+                    document.getElementById('responseMessage').innerText = 'Login failed. Please check your credentials.';
+                }
+            } catch (error) {
+                document.getElementById('responseMessage').innerText = `Error: ${error.message}`;
+            }
+        });
+    </script>
 </body>
 </html>

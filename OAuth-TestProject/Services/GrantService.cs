@@ -34,6 +34,7 @@ namespace Authentication_Server.Services
                 // Create an AuthGrant object to save to the database
                 var authGrant = new AuthGrant
                 {
+                    Username = userName,
                     ClientId = clientId,
                     ClientSecret = clientSecret,
                     AuthGrantCode = grantCode,

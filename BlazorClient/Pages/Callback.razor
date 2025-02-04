@@ -1,0 +1,85 @@
+﻿@page "/callback"
+@inject NavigationManager NavigationManager
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject IConfiguration Configuration
+
+<h3>Processing login...</h3>
+
+@if (!string.IsNullOrEmpty(responseMessage))
+{
+    <div class="alert alert-info mt-3">
+        <strong>Response:</strong> @responseMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string authGrant { get; set; }
+
+    private string clientId;
+    private string clientSecret;
+    private string redirectUri;
+    private string username = "test2"; // Adjust if dynamic username is needed
+    private string responseMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load settings from appsettings.json
+        clientId = Configuration["OAuthSettings:ClientId"];
+        clientSecret = Configuration["OAuthSettings:ClientSecret"];
+        redirectUri = Configuration["OAuthSettings:RedirectUri"];
+
+        if (!string.IsNullOrEmpty(authGrant))
+        {
+            await ExchangeGrantForToken(authGrant);
+        }
+        else
+        {
+            responseMessage = "Authorization grant not found.";
+        }
+    }
+
+    private async Task ExchangeGrantForToken(string grant)
+    {
+        try
+        {
+            var tokenUrl = "https://localhost:7273/user/auth/token";
+            Http.DefaultRequestHeaders.Add("ClientID", clientId);
+
+
+            var tokenRequest = new
+            {
+                AuthGrantCode = grant,
+                Username = username,
+                ClientId = clientId,
+                ClientSecret = clientSecret
+            };
+
+            var tokenResponse = await Http.PostAsJsonAsync(tokenUrl, tokenRequest);
+
+            if (tokenResponse.IsSuccessStatusCode)
+            {
+                var result = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
+                await JS.InvokeVoidAsync("sessionStorage.setItem", "accessToken", result.AccessToken);
+
+                responseMessage = "Token Issued Successfully!";
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                responseMessage = $"Token Request Failed: {tokenResponse.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            responseMessage = $"Exception: {ex.Message}";
+        }
+    }
+
+    public class TokenResponse
+    {
+        public string AccessToken { get; set; }
+    }
+}

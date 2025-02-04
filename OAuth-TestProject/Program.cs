@@ -25,7 +25,17 @@ namespace Authentication_Server
 
             builder.Services.AddControllers();
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowBlazorApp",
+                    policy => policy.WithOrigins("https://localhost:7156") // Blazor app URL
+                                    .AllowAnyHeader()
+                                    .AllowAnyMethod());
+            });
+
             var app = builder.Build();
+
+            app.UseCors("AllowBlazorApp"); // Apply the policy
 
             // Configure middleware
             app.UseAuthorization();
