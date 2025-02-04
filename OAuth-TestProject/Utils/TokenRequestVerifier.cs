@@ -30,6 +30,11 @@ namespace Authentication_Server.Utils
             }
 
             // Optional: Verify the authorization grant (authGrant) - this depends on your specific grant implementation
+            var verifyValidity = await _context.Authorization_Grant.FirstOrDefaultAsync(g => g.AuthGrantCode == authGrant);
+            if ((!verifyValidity!.IsValid))
+            {
+                return false;
+            }
             // For example, if the authorization grant is a code, you would verify if it's valid.
             var authGrantRecord = await _context.Authorization_Grant
                 .Where(ag => ag.AuthGrantCode == authGrant && ag.ClientId == clientId)

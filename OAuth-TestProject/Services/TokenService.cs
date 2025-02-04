@@ -8,19 +8,22 @@ using System.Security.Claims;
 using Authentication_Server.Data;
 using Authentication_Server.Utils;
 using Microsoft.EntityFrameworkCore;
+using Authentication_Server.Models;
 
 namespace Authentication_Server.Services
 {
     public class TokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly ApplicationDbContext _context;
 
-        public TokenService(IConfiguration configuration)
+        public TokenService(IConfiguration configuration, ApplicationDbContext context)
         {
             _configuration = configuration;
+            _context = context;
         }
 
-        public string GenerateToken(string clientId, string userName)
+        public async Task<string> GenerateToken(string clientId, string userName, string authGrant)
         {
 
             var claims = new List<Claim>
@@ -40,6 +43,13 @@ namespace Authentication_Server.Services
                 expires: DateTime.Now.AddHours(1), // Set token expiration time
                 signingCredentials: credentials
             );
+
+            var expireGrant = await _context.Authorization_Grant.FirstOrDefaultAsync(g => g.AuthGrantCode == authGrant);
+            if (expireGrant != null)
+            {
+                expireGrant.IsValid = false;
+                await _context.SaveChangesAsync();
+            }
 
             return new JwtSecurityTokenHandler().WriteToken(token); // Return the token as a string
         }

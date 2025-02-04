@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyServer-Yarp", "ProxySe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ResourceServer_Images", "ImageResource-Server\ResourceServer_Images.csproj", "{DAD78A42-24C5-46FF-944D-5FCCAF77FDC5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorClient", "BlazorClient\BlazorClient.csproj", "{3B30A3EB-D5CA-4C48-BF64-773B538A8495}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorClient", "BlazorClient\BlazorClient.csproj", "{3B30A3EB-D5CA-4C48-BF64-773B538A8495}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -17,7 +17,7 @@ namespace ProxyServer_Yarp.Controllers
             _authService = authService;
         }
 
-        // Route to Image DB
+        // Route to login
         [HttpPost("login")]
         public async Task<IActionResult> UserLogin([FromBody] LoginRequest request)
         {

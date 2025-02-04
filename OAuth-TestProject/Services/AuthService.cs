@@ -21,19 +21,21 @@ namespace Authentication_Server.Services
             _clientVerifier = clientVerifier;
         }
 
-        //public async Task<(bool Success, string? Token, string Message)> LoginAsync(LoginRequest request)
-        //{
+        public async Task<(bool Success, string Message)> LoginAsync(LoginRequest request)
+        {
 
-        //    if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-        //        return (false, null, "Invalid request.");
+            if (request == null || string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
+            {
+                return (false, "Invalid request.");
+            }
 
-        //    var user = await _context.User_Auth.FirstOrDefaultAsync(u => u.Username == request.Username);
-        //    if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.Password!))
-        //        return (false, null, "Invalid username or password.");
+            var user = await _context.User_Auth.FirstOrDefaultAsync(u => u.Username == request.Username);
+            if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.Password!))
+            { return (false, "Invalid username or password."); }
 
-        //    var accessToken = _tokenService.GenerateToken(request.ClientId!, request.Username);
-        //    return (true, accessToken, "Login successful");
-        //}
+            return (true, "Login successful");
+              
+        }
 
 
         public async Task<(bool Success, string Message)> SignupAsync(SignupRequest request)
