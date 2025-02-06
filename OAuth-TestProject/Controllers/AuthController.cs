@@ -95,9 +95,8 @@ namespace Authentication_Server.Controllers
         [HttpPost("token")]
         public async Task<IActionResult> Token([FromBody] TokenRequest request)
         {
-            Console.WriteLine(request.AuthGrantCode, request.ClientSecret, request.ClientId);
             var verifyGrant = await _tokenRequestVerifier.VerifyAuthGrantAsync(request.AuthGrantCode, request.ClientId, request.ClientSecret);
-
+            Console.WriteLine(request.AuthGrantCode);
             if (!verifyGrant)
             {
                 return Unauthorized(new { message = "Invalid authorization grant." });
