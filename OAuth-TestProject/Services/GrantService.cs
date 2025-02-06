@@ -26,10 +26,14 @@ namespace Authentication_Server.Services
             using (var sha256 = SHA256.Create())
             {
                 var hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(baseString));
-                var grantCode = Convert.ToBase64String(hashBytes);
+                var grantCode = Convert.ToBase64String(hashBytes)
+                            .Trim() // Trim leading/trailing spaces
+                            .Replace("=", "") // Remove padding if necessary
+                            .Replace("+", "") // Remove '+' as it may cause issues in URLs
+                            .Replace("/", ""); // Remove '/' to avoid path issues
 
                 // Optionally, you can trim the base64 string to a desired length, e.g., 32 characters
-                grantCode = grantCode.Substring(0, 32); // Example: first 32 chars of the hash as the grant
+                grantCode = grantCode.Length > 32 ? grantCode.Substring(0, 32) : grantCode;
 
                 // Create an AuthGrant object to save to the database
                 var authGrant = new AuthGrant

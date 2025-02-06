@@ -31,7 +31,7 @@ namespace Authentication_Server.Utils
 
             // Optional: Verify the authorization grant (authGrant) - this depends on your specific grant implementation
             var verifyValidity = await _context.Authorization_Grant.FirstOrDefaultAsync(g => g.AuthGrantCode == authGrant);
-            if ((!verifyValidity!.IsValid))
+            if (verifyValidity == null || !verifyValidity.IsValid)
             {
                 return false;
             }
