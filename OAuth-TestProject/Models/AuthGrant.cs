@@ -7,24 +7,24 @@ namespace Authentication_Server.Models
     public class AuthGrant
     {
         [Key]
-        [Column("id")] 
+        [Column("id")]
         public int Id { get; set; }
 
         [Required]
         [Column("user")]
-        public string? Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         [Required]
         [Column("clientId")] 
-        public string? ClientId { get; set; }
+        public string ClientId { get; set; } = string.Empty;
 
         [Required]
         [Column("clientSecret")] 
-        public string? ClientSecret { get; set; }
+        public string ClientSecret { get; set; } = string.Empty;
 
         [Required]
         [Column("authGrant")]
-        public string? AuthGrantCode { get; set; }
+        public string AuthGrantCode { get; set; } = string.Empty;
 
         [Required]
         [Column("createdTime")]

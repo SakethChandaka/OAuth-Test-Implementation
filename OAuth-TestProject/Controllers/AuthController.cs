@@ -80,7 +80,7 @@ namespace Authentication_Server.Controllers
             }
 
             // Generate authorization grant
-            var grant = await _grantService.GenerateGrant(clientId, client.ClientSecret!, request.Username!);
+            var grant = await _grantService.GenerateGrant(clientId, client.ClientSecret, request.Username);
             if (!grant.status)
             {
                 return StatusCode(500, new { message = "An exception occurred while processing your request." });
@@ -96,14 +96,14 @@ namespace Authentication_Server.Controllers
         public async Task<IActionResult> Token([FromBody] TokenRequest request)
         {
             Console.WriteLine(request.AuthGrantCode, request.ClientSecret, request.ClientId);
-            var verifyGrant = await _tokenRequestVerifier.VerifyAuthGrantAsync(request.AuthGrantCode!, request.ClientId!, request.ClientSecret!);
+            var verifyGrant = await _tokenRequestVerifier.VerifyAuthGrantAsync(request.AuthGrantCode, request.ClientId, request.ClientSecret);
 
             if (!verifyGrant)
             {
                 return Unauthorized(new { message = "Invalid authorization grant." });
             }
 
-            var token = await _tokenService.GenerateToken(request.ClientId!,request.Username!, request.AuthGrantCode);
+            var token = await _tokenService.GenerateToken(request.ClientId,request.Username, request.AuthGrantCode);
             if (token == null)
             {
                 return BadRequest(new { message = "Error generating token, try again!." });

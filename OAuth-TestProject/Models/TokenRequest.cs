@@ -2,9 +2,9 @@
 {
     public class TokenRequest
     {
-        public string? AuthGrantCode { get; set; }
-        public string? Username { get; set; }
-        public string? ClientId { get; set; }
-        public string? ClientSecret { get; set; }
+        public string AuthGrantCode { get; set; } = string.Empty;
+        public string Username { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
+        public string ClientSecret { get; set; } = string.Empty;
     }
 }
