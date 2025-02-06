@@ -12,14 +12,14 @@ namespace Authentication_Server.Models
 
         [Required]
         [Column("ClientId")] 
-        public string? ClientId { get; set; }
+        public string ClientId { get; set; } = string.Empty;
 
         [Required]
         [Column("ClientSecret")] 
-        public string? ClientSecret { get; set; }
+        public string ClientSecret { get; set; } = string.Empty;
 
         [Required]
         [Column("Name")]
-        public string? Name { get; set; }
+        public string Name { get; set; } = string.Empty;
     }
 }

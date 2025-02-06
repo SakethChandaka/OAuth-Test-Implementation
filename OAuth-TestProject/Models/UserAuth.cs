@@ -12,21 +12,21 @@ namespace Authentication_Server.Models
 
         [Required]
         [Column("Username")] // Maps to the "Username" column
-        public string? Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         [Required]
         [Column("Password")] // Maps to the "Password" column
-        public string? Password { get; set; } // Store hashed passwords, not plain text!
+        public string Password { get; set; } = string.Empty; // Store hashed passwords, not plain text!
 
         [Required]
         [Column("Email")]
-        public string? Email { get; set; }
+        public string Email  { get; set; } = string.Empty;
 
         [Column("LastUpdatedTime")]
         public DateTimeOffset? LastUpdatedTime { get; set; } // Nullable in case it's not always updated
 
         [Required]
         [Column("CreatedTime")]
-        public DateTimeOffset? CreatedTime { get; set; }
+        public DateTimeOffset? CreatedTime { get; set; } = DateTimeOffset.UtcNow; // Default to current time
     }
 }

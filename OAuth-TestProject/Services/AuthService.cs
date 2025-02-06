@@ -30,7 +30,7 @@ namespace Authentication_Server.Services
             }
 
             var user = await _context.User_Auth.FirstOrDefaultAsync(u => u.Username == request.Username);
-            if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.Password!))
+            if (user == null || !_passwordHasher.VerifyPassword(request.Password, user.Password))
             { return (false, "Invalid username or password."); }
 
             return (true, "Login successful");

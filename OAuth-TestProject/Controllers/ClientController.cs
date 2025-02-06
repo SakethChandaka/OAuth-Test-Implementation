@@ -26,7 +26,7 @@ namespace Authentication_Server.Controllers
             try
             {
                 // Call the AddClient method from HandleClientService
-                var client = _handleClientService.AddClient(request.Name!);
+                var client = _handleClientService.AddClient(request.Name);
 
                 if (client == null)
                 {
